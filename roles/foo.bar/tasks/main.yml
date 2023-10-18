@@ -1,0 +1,7 @@
+---
+- name: install epel
+  block:
+    - name: install epel gpg key
+      ansible.builtin.rpm_key:
+        key: "{{epel_gpg_key}}"
+        state: present
