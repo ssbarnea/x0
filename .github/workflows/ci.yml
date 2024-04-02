@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  push:
+    branches: ["main", "devel/*"]
+  pull_request:
+    branches: ["main", "devel/*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+# env:
+#   WSLENV: HOSTNAME:CI:FORCE_COLOR:GITHUB_ACTION:GITHUB_ACTION_PATH/p:GITHUB_ACTION_REPOSITORY:GITHUB_WORKFLOW:GITHUB_WORKSPACE/p:GITHUB_PATH/p:GITHUB_ENV/p:VIRTUAL_ENV/p
+#   HOSTNAME: gha
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    defaults:
+      run:
+        shell: "wsl-bash {0}"
+
+    runs-on:  windows-2022
+    steps:
+      # - name: Disable autocrlf
+      #   if: contains(github.job.runs-on, 'windows')
+      #   run: |-
+      #     git config --global core.autocrlf false
+      #     git config --global core.eol lf
+      #   shell: bash # <-- keep it here to avoid using default shell
+
+      - uses: actions/checkout@v4
+
+      - name: Activate WSL
+        uses: Vampire/setup-wsl@v3.0.0
+        with:
+          distribution: Ubuntu-22.04
+          set-as-default: true
+          use-cache: true
+          update: false
+          wsl-shell-command: "bash -i"
+          wsl-conf: |
+            [automount]
+            enabled = true
+            root = /
+            options = "metadata,umask=077"
+            [interop]
+            enabled = false
+            appendWindowsPath = false
+            [network]
+            hostname = wsl
+          additional-packages:
+            curl
+            dirmngr
+            gawk
+            git
+            gpg
+            gpg-agent
+            make
+            tar
+          # asdf nodejs plugin requires: dirmngr gpg curl gawk
+
+      # https://github.com/asdf-vm/actions/issues/580
+      # - name: Setup asdf
+      #   uses: asdf-vm/actions/install@v3
+
+      - name: Install asdf inside WSL
+        run: |
+          set -ex
+          git -c advice.detachedHead=false clone --quiet https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+          echo '. "$HOME/.asdf/asdf.sh"' >> ~/.bashrc
+          export ASDF_DIR="$HOME/.asdf"
+          . "$HOME/.asdf/asdf.sh"
+          asdf plugin add task
+          asdf install
+          task --version
+          ls -la ~/
+          bash --login -c 'asdf --version'
+
+      - name: task setup
+        run: |
+          echo $BASH
+          echo $BASHOPTS
+          bash --login -c 'asdf --version'
+          bash -c 'asdf --version'
+          asdf --version
+          task --version
+
