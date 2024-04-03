@@ -1,0 +1,20 @@
+name: ci
+
+on:
+  push:
+    branches: ["main", "devel/*"]
+    tags:
+      - 'v*.*'
+  pull_request:
+    branches: ["main", "devel/*"]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  check: # This job does nothing and is only used for the branch protection
+    if: always()
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo 123
+
