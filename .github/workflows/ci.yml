@@ -33,3 +33,12 @@ jobs:
       - check
     steps:
       - run: echo doing the release
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # we need tags for dynamic versioning
+          show-progress: false
+
+      - name: fail if not on a tag
+        run: |
+          git describe --tags --exact-match
