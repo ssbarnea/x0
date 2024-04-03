@@ -7,6 +7,10 @@ on:
       - 'v*.*'
   pull_request:
     branches: ["main", "devel/*"]
+  release:
+    types: [published]
+  workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
@@ -17,4 +21,15 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - run: echo 123
-
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github.event.release) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+  release:
+    if: github.event.release
+    runs-on: ubuntu-22.04
+    needs:
+      - check
+    steps:
+      - run: echo doing the release
