@@ -1,0 +1,30 @@
+# See https://github.com/ansible/team-devtools/blob/main/.github/workflows/ack.yml
+name: ack
+on:
+  pull_request_target:
+    types: [opened, labeled, unlabeled]
+
+jobs:
+  # ack:
+  #   uses: ansible/team-devtools/.github/workflows/ack.yml@main
+  #   secrets: inherit
+  drafter:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write # needed to update release
+      pull-requests: write # pr approval a
+    steps:
+      - name: Release Drafter
+        # if: github.event.action == 'opened' && github.event.issue.labels.length == 0
+        uses: release-drafter/release-drafter@v6
+        with:
+          # we only want to use the auto-labeler bits:
+          # disable-autolabeler: false
+          disable-releaser: false
+          version: null
+          #1.2.3
+        # config from .github/release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
